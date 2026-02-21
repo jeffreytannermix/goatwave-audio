@@ -1,7 +1,7 @@
 Flask
 gunicorn
 numpy
+scipy
 librosa
 soundfile
-scipy
-torch
+torch==2.10.0+cpu --index-url https://download.pytorch.org/whl/cpu
