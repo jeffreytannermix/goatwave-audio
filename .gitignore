@@ -1,7 +1,12 @@
+# Python virtual environment
 venv/
+
+# Audio/model folders
 uploads/
 mixes/
 separated/
 models/
+
+# System files
 .DS_Store
 *.dmg
