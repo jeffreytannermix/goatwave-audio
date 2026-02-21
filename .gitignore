@@ -1,0 +1,7 @@
+venv/
+uploads/
+mixes/
+separated/
+models/
+.DS_Store
+*.dmg

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goat Wave Audio — AI Music Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f7f5;--white:#ffffff;--border:#e8e8e4;--border-dark:#d0d0c8;
+  --text:#1a1a18;--muted:#888880;
+  --accent:#2563eb;--accent-light:#eff4ff;
+  --pink:#e91e8c;--pink-light:#fce4f3;
+  --teal:#00b4a6;--teal-light:#e0f7f5;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --indigo:#6366f1;--indigo-light:#e0e7ff;
+  --gold:#d97706;--gold-light:#fef3c7;
+  --success:#16a34a;--success-light:#f0fdf4;
+  --error:#dc2626;--error-light:#fef2f2;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-logo img{height:48px;width:auto}
+.nav-badge{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+
+/* TABS */
+.tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;justify-content:center;gap:0;position:sticky;top:64px;z-index:99}
+.tab-btn{display:flex;align-items:center;gap:8px;padding:16px 32px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--text);font-weight:600}
+.tab-btn .tab-icon{font-size:16px}
+
+/* MAIN */
+.main{max-width:760px;margin:0 auto;padding:40px 24px 80px}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeUp 0.3s ease both}
+
+/* HERO */
+.hero{text-align:center;margin-bottom:40px}
+.hero h1{font-size:30px;font-weight:600;letter-spacing:-0.8px;line-height:1.2;margin-bottom:8px}
+.hero p{color:var(--muted);font-size:14px;line-height:1.6}
+
+/* TOOL LABELS */
+.tool-label{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tool-label span{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card-section{padding:20px 24px;border-bottom:1px solid var(--border)}
+.card-section:last-child{border-bottom:none}
+.section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:16px;margin:28px 0;color:var(--muted);font-size:11px;letter-spacing:0.1em;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* STEM BUTTONS */
+.stem-grid{display:flex;gap:8px;flex-wrap:wrap}
+.stem-btn{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 14px;cursor:pointer;transition:all 0.15s}
+.stem-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light)}
+.stem-btn.active{background:var(--teal);border-color:var(--teal);color:white}
+
+/* DROPZONES */
+.dropzone{border:2px dashed var(--border-dark);border-radius:10px;padding:36px 28px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg)}
+.dropzone.dz-pink:hover,.dropzone.dz-pink.dragover{border-color:var(--pink);background:var(--pink-light)}
+.dropzone.dz-teal:hover,.dropzone.dz-teal.dragover{border-color:var(--teal);background:var(--teal-light)}
+.dropzone.dz-purple:hover,.dropzone.dz-purple.dragover{border-color:var(--purple);background:var(--purple-light)}
+.dropzone.dz-gold:hover,.dropzone.dz-gold.dragover{border-color:var(--gold);background:var(--gold-light)}
+.drop-icon-wrap{width:44px;height:44px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;box-shadow:var(--shadow);transition:transform 0.2s}
+.dropzone.dragover .drop-icon-wrap{transform:scale(1.1)}
+.drop-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.drop-sub{font-size:13px;color:var(--muted)}
+.drop-sub span{font-weight:500;cursor:pointer}
+.dz-pink .drop-sub span{color:var(--pink)}
+.dz-teal .drop-sub span{color:var(--teal)}
+.dz-purple .drop-sub span{color:var(--purple)}
+.dz-gold .drop-sub span{color:var(--gold)}
+.drop-formats{margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.format-tag{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:2px 7px}
+
+/* SLIDERS */
+input[type=range]{width:100%;accent-color:var(--teal)}
+
+/* ANALYSIS */
+.analysis-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:10px}
+.analysis-card .filename{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.analysis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.analysis-item{background:var(--bg);border-radius:8px;padding:14px;text-align:center}
+.analysis-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.analysis-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.analysis-value.key-val{color:var(--pink)}
+.analysis-value.bpm-val{color:var(--teal)}
+
+/* JOB CARDS */
+.jobs-section{display:none}
+.jobs-section.visible{display:block}
+.job-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:12px;box-shadow:var(--shadow)}
+.job-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;flex-shrink:0}
+.status-pill.processing{background:#fef9c3;color:#854d0e}
+.status-pill.analyzing{background:var(--pink-light);color:var(--pink)}
+.status-pill.done{background:var(--success-light);color:var(--success)}
+.status-pill.error{background:var(--error-light);color:var(--error)}
+.status-pill.queued{background:var(--teal-light);color:var(--teal)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.processing .status-dot,.analyzing .status-dot{animation:pulse 1s infinite}
+.job-filename{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inline-analysis{display:flex;gap:12px;margin-bottom:12px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
+.inline-analysis .analysis-item{background:transparent;padding:0;text-align:left}
+.inline-analysis .analysis-value{font-size:15px}
+.waveform{display:flex;align-items:center;gap:3px;height:24px}
+.wave-bar{width:3px;background:var(--teal);border-radius:2px;opacity:0.6;animation:wave 1.1s ease-in-out infinite}
+.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:.08s}.wave-bar:nth-child(3){animation-delay:.16s}.wave-bar:nth-child(4){animation-delay:.24s}.wave-bar:nth-child(5){animation-delay:.32s}.wave-bar:nth-child(6){animation-delay:.24s}.wave-bar:nth-child(7){animation-delay:.16s}.wave-bar:nth-child(8){animation-delay:.08s}.wave-bar:nth-child(9){animation-delay:0s}.wave-bar:nth-child(10){animation-delay:.08s}
+.processing-label{font-size:12px;color:var(--muted);margin-left:8px}
+.download-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.dl-btn{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:10px 14px;cursor:pointer;text-decoration:none;transition:all 0.15s}
+.dl-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light)}
+
+/* TOGGLE */
+.toggle-wrap{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle-track{position:absolute;inset:0;border-radius:11px;cursor:pointer;transition:0.2s;background:var(--border-dark)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);pointer-events:none}
+
+/* ADVANCED SETTINGS */
+.advanced-toggle{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;padding:4px 0;user-select:none;letter-spacing:0.04em;text-transform:uppercase}
+.advanced-toggle:hover{color:var(--text)}
+.advanced-toggle .chevron{transition:transform 0.2s;font-size:10px}
+.advanced-toggle.open .chevron{transform:rotate(180deg)}
+.advanced-body{display:none;margin-top:16px}
+.advanced-body.open{display:block}
+
+/* BIG BUTTONS */
+.action-btn{width:100%;padding:14px;color:white;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.action-btn:disabled{opacity:0.6;cursor:not-allowed}
+.btn-purple{background:var(--purple)}.btn-purple:hover:not(:disabled){background:#6d28d9}
+.btn-indigo{background:var(--indigo)}.btn-indigo:hover:not(:disabled){background:#4f46e5}
+.btn-pink{background:var(--pink)}.btn-pink:hover:not(:disabled){background:#c2185b}
+.btn-gold{background:var(--gold)}.btn-gold:hover:not(:disabled){background:#b45309}
+.action-status{margin-top:12px;font-size:13px;color:var(--muted);text-align:center;min-height:20px}
+
+/* FOOTER */
+.footer{text-align:center;margin-top:48px;font-size:12px;color:var(--muted)}
+.footer-dot{margin:0 6px;opacity:0.4}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes wave{0%,100%{height:4px}50%{height:20px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><img src="/static/logo.jpg" alt="Goat Wave Audio"></div>
+  <span class="nav-badge">AI Music Tools</span>
+</nav>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('studio')" id="tab-studio">
+    <span class="tab-icon">🎛</span> Studio
+  </button>
+  <button class="tab-btn" onclick="switchTab('tools')" id="tab-tools">
+    <span class="tab-icon">🔧</span> Audio Tools
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STUDIO TAB -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-studio">
+
+    <!-- 1. MIXER & MASTER -->
+    <div class="tool-label" style="color:var(--purple)"><span style="background:var(--purple-light)">🎚️</span> Mixer &amp; Master</div>
+    <div class="card" id="mixerCard">
+      <div class="card-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div class="section-title">🎤 Vocals Track</div>
+            <div class="dropzone dz-pink" id="voxZone" onclick="document.getElementById('voxInput').click()" style="padding:24px">
+              <div class="drop-icon-wrap" style="width:36px;height:36px;font-size:16px;margin-bottom:10px">🎤</div>
+              <div class="drop-title" style="font-size:13px">Drop vocals</div>
+              <p class="drop-sub" style="font-size:12px">or <span>browse</span></p>
+            </div>
+            <input type="file" id="voxInput" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="voxName" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center"></div>
+          </div>
+          <div>
+            <div class="section-title">🎵 Instrumental Track</div>
+            <div class="dropzone dz-teal" id="instZone" onclick="document.getElementById('instInput').click()" style="padding:24px">
+              <div class="drop-icon-wrap" style="width:36px;height:36px;font-size:16px;margin-bottom:10px">🎵</div>
+              <div class="drop-title" style="font-size:13px">Drop instrumental</div>
+              <p class="drop-sub" style="font-size:12px">or <span>browse</span></p>
+            </div>
+            <input type="file" id="instInput" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="instName" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-title">🎤 Vocal Effects</div>
+        <!-- Autotune toggle -->
+        <div style="margin-bottom:16px;padding:14px;background:var(--pink-light);border-radius:8px;border:1px solid rgba(233,30,140,0.2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+            <div style="font-size:12px;font-weight:700;color:var(--pink);letter-spacing:0.06em;text-transform:uppercase">🎤 Autotune</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:12px;color:var(--muted)">Enable</span>
+              <div class="toggle-wrap" onclick="toggleMixerAt()">
+                <div class="toggle-track" id="mixAt_track"></div>
+                <div class="toggle-thumb" id="mixAt_thumb"></div>
+              </div>
+            </div>
+          </div>
+          <div id="mixAt_controls" style="display:none;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">KEY</label>
+              <select id="mix_at_key" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:white">
+                <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">CORRECTION</label>
+              <input type="range" id="mix_at_correction" min="0" max="1" step="0.1" value="0.8">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>Subtle</span><span id="mix_at_val">80%</span><span>Heavy</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div><label class="section-title" style="display:block">VOLUME</label><input type="range" id="vocal_volume" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="vocal_volume_val">100%</div></div>
+          <div><label class="section-title" style="display:block">HIGH PASS</label><input type="range" id="highpass" min="20" max="300" step="10" value="80"><div style="font-size:11px;color:var(--muted);text-align:center" id="highpass_val">80hz</div></div>
+          <div><label class="section-title" style="display:block">COMPRESSION</label><input type="range" id="comp_threshold" min="-40" max="0" step="1" value="-18"><div style="font-size:11px;color:var(--muted);text-align:center" id="comp_threshold_val">-18db</div></div>
+          <div><label class="section-title" style="display:block">LOW EQ</label><input type="range" id="low" min="-12" max="12" step="1" value="0"><div style="font-size:11px;color:var(--muted);text-align:center" id="low_val">0db</div></div>
+          <div><label class="section-title" style="display:block">HIGH EQ</label><input type="range" id="high" min="-12" max="12" step="1" value="2"><div style="font-size:11px;color:var(--muted);text-align:center" id="high_val">2db</div></div>
+          <div><label class="section-title" style="display:block">REVERB</label><input type="range" id="reverb_mix" min="0" max="0.8" step="0.05" value="0.15"><div style="font-size:11px;color:var(--muted);text-align:center" id="reverb_mix_val">15%</div></div>
+          <div><label class="section-title" style="display:block">DELAY MIX</label><input type="range" id="delay_mix" min="0" max="0.8" step="0.05" value="0.1"><div style="font-size:11px;color:var(--muted);text-align:center" id="delay_mix_val">10%</div></div>
+          <div><label class="section-title" style="display:block">DELAY TIME</label><input type="range" id="delay_time" min="0.1" max="1" step="0.05" value="0.25"><div style="font-size:11px;color:var(--muted);text-align:center" id="delay_time_val">0.25s</div></div>
+          <div><label class="section-title" style="display:block">INST VOL</label><input type="range" id="instrumental_volume" min="0" max="2" step="0.1" value="0.9"><div style="font-size:11px;color:var(--muted);text-align:center" id="instrumental_volume_val">90%</div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <button class="action-btn btn-purple" id="mixBtn" onclick="startMix()">🎚️ Mix &amp; Master</button>
+        <div class="action-status" id="mixStatus"></div>
+      </div>
+    </div>
+
+    <div class="divider">Multitrack Mixer</div>
+
+    <!-- 2. MULTITRACK MIXER -->
+    <div class="tool-label" style="color:var(--indigo)"><span style="background:var(--indigo-light)">🎛</span> Multitrack Mixer</div>
+    <div class="card">
+      <div class="card-section">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Drop individual stems into each track. Only filled tracks will be included.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--pink);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🎤 Vocals</div>
+            <div class="dropzone dz-pink" id="mt_zone_vocals" style="padding:16px;cursor:pointer" onclick="document.getElementById('mt_input_vocals').click()"><div style="font-size:20px;margin-bottom:6px">🎤</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_vocals" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_vocals" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🥁 Drums</div>
+            <div class="dropzone dz-teal" id="mt_zone_drums" style="padding:16px;cursor:pointer" onclick="document.getElementById('mt_input_drums').click()"><div style="font-size:20px;margin-bottom:6px">🥁</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_drums" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_drums" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🎸 Bass</div>
+            <div class="dropzone" id="mt_zone_bass" style="padding:16px;cursor:pointer;border-color:#f59e0b44" onclick="document.getElementById('mt_input_bass').click()"><div style="font-size:20px;margin-bottom:6px">🎸</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_bass" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_bass" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#10b981;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🎸 Guitar</div>
+            <div class="dropzone" id="mt_zone_guitar" style="padding:16px;cursor:pointer;border-color:#10b98144" onclick="document.getElementById('mt_input_guitar').click()"><div style="font-size:20px;margin-bottom:6px">🎸</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_guitar" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_guitar" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--indigo);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🎹 Keys</div>
+            <div class="dropzone dz-indigo" id="mt_zone_keys" style="padding:16px;cursor:pointer;border-color:#6366f144" onclick="document.getElementById('mt_input_keys').click()"><div style="font-size:20px;margin-bottom:6px">🎹</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_keys" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_keys" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">🎵 Other</div>
+            <div class="dropzone" id="mt_zone_other" style="padding:16px;cursor:pointer" onclick="document.getElementById('mt_input_other').click()"><div style="font-size:20px;margin-bottom:6px">🎵</div><div style="font-size:11px;color:var(--muted)">Drop or click</div></div>
+            <input type="file" id="mt_input_other" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="mt_name_other" style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-title">Track Volumes</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🎤 Vocals</label><input type="range" id="mt_vol_vocals" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_vocals_val">100%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🥁 Drums</label><input type="range" id="mt_vol_drums" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_drums_val">100%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🎸 Bass</label><input type="range" id="mt_vol_bass" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_bass_val">100%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🎸 Guitar</label><input type="range" id="mt_vol_guitar" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_guitar_val">100%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🎹 Keys</label><input type="range" id="mt_vol_keys" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_keys_val">100%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">🎵 Other</label><input type="range" id="mt_vol_other" min="0" max="2" step="0.1" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vol_other_val">100%</div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-title">🎤 Vocal Effects</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">AUTOTUNE</label>
+            <div style="display:flex;align-items:center;gap:8px;padding-top:4px">
+              <div class="toggle-wrap" onclick="toggleMtAt()"><div class="toggle-track" id="mtAt_track"></div><div class="toggle-thumb" id="mtAt_thumb"></div></div>
+              <span id="mtAt_label" style="font-size:12px;color:var(--muted)">Off</span>
+            </div>
+          </div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">KEY</label><select id="mt_at_key" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg)"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">REVERB</label><input type="range" id="mt_vocals_reverb_mix" min="0" max="0.8" step="0.05" value="0.15"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vocals_reverb_mix_val">15%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">COMPRESSION</label><input type="range" id="mt_vocals_comp" min="-40" max="0" step="1" value="-18"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vocals_comp_val">-18db</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">DELAY MIX</label><input type="range" id="mt_vocals_delay_mix" min="0" max="0.8" step="0.05" value="0.1"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vocals_delay_mix_val">10%</div></div>
+          <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">HIGH PASS</label><input type="range" id="mt_vocals_highpass" min="20" max="300" step="10" value="80"><div style="font-size:11px;color:var(--muted);text-align:center" id="mt_vocals_highpass_val">80hz</div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <button class="action-btn btn-indigo" id="mtMixBtn" onclick="startMultitrack()">🎛 Mix All Tracks &amp; Master</button>
+        <div class="action-status" id="mtStatus"></div>
+      </div>
+    </div>
+
+    <div class="divider">Mastering</div>
+
+    <!-- 3. MASTERING -->
+    <div class="tool-label" style="color:var(--gold)"><span style="background:var(--gold-light)">✨</span> Mastering</div>
+    <div class="card">
+      <div class="card-section">
+        <div class="dropzone dz-gold" id="masterZone" onclick="document.getElementById('masterInput').click()">
+          <div class="drop-icon-wrap">✨</div>
+          <div class="drop-title">Drop your mix to master</div>
+          <p class="drop-sub">Get a polished, release-ready track — or <span>browse files</span></p>
+          <div class="drop-formats">
+            <span class="format-tag">MP3</span><span class="format-tag">WAV</span><span class="format-tag">FLAC</span>
+          </div>
+        </div>
+        <input type="file" id="masterInput" accept=".mp3,.wav,.flac" style="display:none">
+        <div id="masterFileName" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+      </div>
+
+      <!-- Quick Master -->
+      <div class="card-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">TARGET LOUDNESS</label>
+            <select id="master_target" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg)">
+              <option value="-14">-14 LUFS — Streaming (Spotify)</option>
+              <option value="-16">-16 LUFS — Streaming (Apple)</option>
+              <option value="-9">-9 LUFS — Loud / Club</option>
+              <option value="-23">-23 LUFS — Broadcast</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">LIMITER CEILING</label>
+            <select id="master_ceiling" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg)">
+              <option value="-0.3">-0.3 dBTP (Recommended)</option>
+              <option value="-1.0">-1.0 dBTP (Safe)</option>
+              <option value="-0.1">-0.1 dBTP (Maximum)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="advanced-toggle" id="masterAdvToggle" onclick="toggleMasterAdv()">
+          <span>⚙️ Advanced Settings</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="advanced-body" id="masterAdvBody">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px">
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">LOW SHELF (db)</label><input type="range" id="m_low" min="-6" max="6" step="0.5" value="0"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_low_val">0db</div></div>
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">MID EQ (db)</label><input type="range" id="m_mid" min="-6" max="6" step="0.5" value="0"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_mid_val">0db</div></div>
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">HIGH SHELF (db)</label><input type="range" id="m_high" min="-6" max="6" step="0.5" value="1"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_high_val">1db</div></div>
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">STEREO WIDTH</label><input type="range" id="m_width" min="0.5" max="2.0" step="0.1" value="1.0"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_width_val">100%</div></div>
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">COMP THRESHOLD</label><input type="range" id="m_comp" min="-24" max="0" step="1" value="-12"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_comp_val">-12db</div></div>
+            <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">HARMONIC EXCITER</label><input type="range" id="m_exciter" min="0" max="0.3" step="0.01" value="0.05"><div style="font-size:11px;color:var(--muted);text-align:center" id="m_exciter_val">5%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <button class="action-btn btn-gold" id="masterBtn" onclick="startMastering()">✨ Master This Track</button>
+        <div class="action-status" id="masterStatus"></div>
+      </div>
+    </div>
+
+  </div><!-- /studio panel -->
+
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- AUDIO TOOLS TAB -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-tools">
+
+    <!-- 1. KEY ANALYZER -->
+    <div class="tool-label" style="color:var(--pink)"><span style="background:var(--pink-light)">🎵</span> Key Analyzer</div>
+    <div class="card">
+      <div class="card-section">
+        <div class="dropzone dz-pink" id="analyzeZone" onclick="document.getElementById('analyzeInput').click()">
+          <div class="drop-icon-wrap">🔍</div>
+          <div class="drop-title">Drop a song to analyze</div>
+          <p class="drop-sub">Detect <strong>Key</strong>, <strong>BPM</strong> &amp; <strong>Duration</strong> — or <span>browse files</span></p>
+          <div class="drop-formats"><span class="format-tag">MP3</span><span class="format-tag">WAV</span><span class="format-tag">FLAC</span><span class="format-tag">M4A</span></div>
+        </div>
+        <input type="file" id="analyzeInput" accept=".mp3,.wav,.flac,.m4a,.ogg" multiple style="display:none">
+      </div>
+    </div>
+    <div id="analysisResults"></div>
+
+    <div class="divider">Auto Tune</div>
+
+    <!-- 2. AUTO TUNE -->
+    <div class="tool-label" style="color:var(--pink)"><span style="background:var(--pink-light)">🎤</span> Auto Tune</div>
+    <div class="card">
+      <div class="card-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <div class="section-title">Vocals File</div>
+            <div class="dropzone dz-pink" id="atZone" style="padding:24px" onclick="document.getElementById('atInput').click()">
+              <div class="drop-icon-wrap" style="width:36px;height:36px;font-size:16px;margin-bottom:10px">🎤</div>
+              <div class="drop-title" style="font-size:13px">Drop vocals</div>
+              <p class="drop-sub" style="font-size:12px">or <span>browse</span></p>
+            </div>
+            <input type="file" id="atInput" accept=".mp3,.wav,.flac" style="display:none">
+            <div id="atName" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center"></div>
+          </div>
+          <div>
+            <div class="section-title">Settings</div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-top:4px">
+              <div>
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">KEY</label>
+                <select id="at_key" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg)">
+                  <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">CORRECTION AMOUNT</label>
+                <input type="range" id="at_correction" min="0" max="1" step="0.1" value="0.8">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>Subtle</span><span id="at_correction_val">80%</span><span>Heavy</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="action-btn btn-pink" id="atBtn" onclick="startAutotune()">🎤 Apply Auto Tune</button>
+        <div class="action-status" id="atStatus"></div>
+      </div>
+    </div>
+
+    <div class="divider">Stem Splitter</div>
+
+    <!-- 3. STEM SPLITTER -->
+    <div class="tool-label" style="color:var(--teal)"><span style="background:var(--teal-light)">✂️</span> Stem Splitter</div>
+    <div class="card">
+      <div class="card-section">
+        <div class="section-title">Separation Mode</div>
+        <div class="stem-grid">
+          <button class="stem-btn active" data-value="all" onclick="selectStem(this)"><span>🎛</span> All Stems</button>
+          <button class="stem-btn" data-value="vocals" onclick="selectStem(this)"><span>🎤</span> Vocals</button>
+          <button class="stem-btn" data-value="drums" onclick="selectStem(this)"><span>🥁</span> Drums</button>
+          <button class="stem-btn" data-value="bass" onclick="selectStem(this)"><span>🎸</span> Bass</button>
+          <button class="stem-btn" data-value="other" onclick="selectStem(this)"><span>🎹</span> Other</button>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="dropzone dz-teal" id="splitZone" onclick="document.getElementById('fileInput').click()">
+          <div class="drop-icon-wrap">✂️</div>
+          <div class="drop-title">Drop a song to split</div>
+          <p class="drop-sub">Separate into individual stems — or <span>browse files</span></p>
+          <div class="drop-formats"><span class="format-tag">MP3</span><span class="format-tag">WAV</span><span class="format-tag">FLAC</span><span class="format-tag">M4A</span></div>
+        </div>
+        <input type="file" id="fileInput" accept=".mp3,.wav,.flac,.m4a,.ogg" multiple style="display:none">
+      </div>
+    </div>
+    <div class="jobs-section" id="jobsSection"></div>
+
+  </div><!-- /tools panel -->
+
+  <div class="footer">
+    Goat Wave Audio <span class="footer-dot">·</span> Runs 100% locally on your Mac <span class="footer-dot">·</span> Powered by Meta Demucs
+  </div>
+</div>
+
+<script>
+// ── TABS ──────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ── SHARED UTILS ──────────────────────────────
+function setupDrop(zone, onFile) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]); });
+}
+function setToggle(track, thumb, on, color) {
+  track.style.background = on ? color : 'var(--border-dark)';
+  thumb.style.left = on ? '21px' : '3px';
+}
+
+// ── ADVANCED SETTINGS ─────────────────────────
+let masterAdvOpen = false;
+function toggleMasterAdv() {
+  masterAdvOpen = !masterAdvOpen;
+  const toggle = document.getElementById('masterAdvToggle');
+  const body = document.getElementById('masterAdvBody');
+  toggle.classList.toggle('open', masterAdvOpen);
+  body.classList.toggle('open', masterAdvOpen);
+}
+
+// ── MASTERING SLIDERS ─────────────────────────
+[
+  {id:'m_low',unit:'db'},{id:'m_mid',unit:'db'},{id:'m_high',unit:'db'},
+  {id:'m_width',unit:'%',mult:100},{id:'m_comp',unit:'db'},{id:'m_exciter',unit:'%',mult:100}
+].forEach(s => {
+  const el = document.getElementById(s.id);
+  const val = document.getElementById(s.id + '_val');
+  el.addEventListener('input', () => {
+    let v = parseFloat(el.value);
+    if (s.mult) v = Math.round(v * s.mult);
+    val.textContent = v + s.unit;
+  });
+});
+
+// ── MASTERING ─────────────────────────────────
+let _masterFile = null;
+setupDrop(document.getElementById('masterZone'), f => {
+  _masterFile = f;
+  document.getElementById('masterFileName').textContent = '✅ ' + f.name;
+});
+document.getElementById('masterInput').addEventListener('change', function() {
+  _masterFile = this.files[0];
+  document.getElementById('masterFileName').textContent = '✅ ' + _masterFile.name;
+});
+
+function startMastering() {
+  if (!_masterFile) { alert('Please drop a file to master!'); return; }
+  const btn = document.getElementById('masterBtn');
+  const status = document.getElementById('masterStatus');
+  btn.disabled = true; btn.textContent = '⏳ Mastering...';
+  status.textContent = 'Analyzing and processing your track...';
+  const fd = new FormData();
+  fd.append('file', _masterFile);
+  fd.append('target_lufs', document.getElementById('master_target').value);
+  fd.append('ceiling', document.getElementById('master_ceiling').value);
+  fd.append('low_db', document.getElementById('m_low').value);
+  fd.append('mid_db', document.getElementById('m_mid').value);
+  fd.append('high_db', document.getElementById('m_high').value);
+  fd.append('width', document.getElementById('m_width').value);
+  fd.append('comp_threshold', document.getElementById('m_comp').value);
+  fd.append('exciter', document.getElementById('m_exciter').value);
+  fetch('/master', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.job_id) pollMaster(data.job_id, btn, status);
+      else { btn.disabled = false; btn.textContent = '✨ Master This Track'; status.textContent = 'Error: ' + (data.error || 'Unknown'); }
+    })
+    .catch(() => { btn.disabled = false; btn.textContent = '✨ Master This Track'; status.textContent = 'Upload failed'; });
+}
+
+function pollMaster(jobId, btn, status) {
+  const interval = setInterval(() => {
+    fetch('/master_status/' + jobId).then(r => r.json()).then(data => {
+      if (data.status === 'processing') { status.textContent = '✨ Applying EQ, compression, stereo width & limiting...'; }
+      else if (data.status === 'done') {
+        clearInterval(interval); btn.disabled = false; btn.textContent = '✨ Master This Track';
+        status.innerHTML = `✅ Mastered! <a href="/master_download/${jobId}/${data.file}" download style="color:var(--gold);font-weight:600">⬇️ Download Mastered Track</a>`;
+      } else if (data.status === 'error') {
+        clearInterval(interval); btn.disabled = false; btn.textContent = '✨ Master This Track';
+        status.textContent = 'Error: ' + (data.error || 'Something went wrong');
+      }
+    });
+  }, 2000);
+}
+
+// ── STEM SPLITTER ─────────────────────────────
+let selectedStem = 'all';
+function selectStem(btn) { document.querySelectorAll('.stem-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); selectedStem = btn.dataset.value; }
+setupDrop(document.getElementById('splitZone'), uploadFile);
+document.getElementById('fileInput').addEventListener('change', function() { [...this.files].forEach(uploadFile); this.value = ''; });
+function uploadFile(file) {
+  const card = createJobCard(file.name);
+  document.getElementById('jobsSection').classList.add('visible');
+  const fd = new FormData(); fd.append('file', file); fd.append('stems', selectedStem);
+  fetch('/upload', { method: 'POST', body: fd }).then(r => r.json()).then(data => { if (data.job_id) pollSplit(data.job_id, card); else setJobError(card, 'Upload failed'); }).catch(() => setJobError(card, 'Upload failed'));
+}
+function createJobCard(filename) {
+  const section = document.getElementById('jobsSection');
+  const card = document.createElement('div'); card.className = 'job-card';
+  card.innerHTML = `<div class="job-header"><div class="status-pill queued"><div class="status-dot"></div> Queued</div><div class="job-filename">${filename}</div></div><div class="waveform-wrap"><div style="display:flex;align-items:center;gap:8px"><div class="waveform">${Array(10).fill('<div class="wave-bar"></div>').join('')}</div><span class="processing-label">Uploading...</span></div></div>`;
+  section.prepend(card); return card;
+}
+const stemEmoji = { 'vocals.wav':'🎤','drums.wav':'🥁','bass.wav':'🎸','other.wav':'🎹','no_vocals.wav':'🎵','no_drums.wav':'🎵','no_bass.wav':'🎵' };
+function pollSplit(jobId, card) {
+  const interval = setInterval(() => {
+    fetch('/status/' + jobId).then(r => r.json()).then(data => {
+      const pill = card.querySelector('.status-pill');
+      const label = card.querySelector('.processing-label');
+      if (data.status === 'analyzing') { pill.className = 'status-pill analyzing'; pill.innerHTML = '<div class="status-dot"></div> Analyzing'; if (label) label.textContent = 'Detecting key & BPM...'; }
+      else if (data.status === 'processing') { pill.className = 'status-pill processing'; pill.innerHTML = '<div class="status-dot"></div> Processing'; if (label) label.textContent = 'AI separating stems...'; if (data.analysis && !card.querySelector('.inline-analysis')) showInlineAnalysis(card, data.analysis); }
+      else if (data.status === 'done') {
+        clearInterval(interval); pill.className = 'status-pill done'; pill.innerHTML = '<div class="status-dot"></div> Complete';
+        if (data.analysis && !card.querySelector('.inline-analysis')) showInlineAnalysis(card, data.analysis);
+        card.querySelector('.waveform-wrap').innerHTML = `<div class="download-grid">${data.files.map(f => `<a href="/download/${jobId}/${f}" class="dl-btn" download="${f}"><span>${stemEmoji[f]||'🎵'}</span>${f.replace('.wav','')}</a>`).join('')}</div>`;
+      } else if (data.status === 'error') { clearInterval(interval); setJobError(card, data.error || 'Something went wrong'); }
+    });
+  }, 2000);
+}
+function showInlineAnalysis(card, a) {
+  const bar = document.createElement('div'); bar.className = 'inline-analysis';
+  bar.innerHTML = `<div class="analysis-item"><div class="analysis-label">Key</div><div class="analysis-value key-val">${a.key}</div></div><div class="analysis-item"><div class="analysis-label">BPM</div><div class="analysis-value bpm-val">${a.bpm}</div></div><div class="analysis-item"><div class="analysis-label">Duration</div><div class="analysis-value">${a.duration}</div></div>`;
+  card.querySelector('.waveform-wrap').before(bar);
+}
+function setJobError(card, msg) { const pill = card.querySelector('.status-pill'); pill.className = 'status-pill error'; pill.innerHTML = '<div class="status-dot"></div> Error'; card.querySelector('.waveform-wrap').innerHTML = `<p style="font-size:13px;color:var(--error)">${msg}</p>`; }
+
+// ── KEY ANALYZER ──────────────────────────────
+setupDrop(document.getElementById('analyzeZone'), analyzeFile);
+document.getElementById('analyzeInput').addEventListener('change', function() { [...this.files].forEach(analyzeFile); this.value = ''; });
+function analyzeFile(file) {
+  const results = document.getElementById('analysisResults');
+  const card = document.createElement('div'); card.className = 'analysis-card';
+  card.innerHTML = `<div class="filename">🎵 ${file.name} &nbsp;<span class="spinner"></span></div><div style="font-size:12px;color:var(--muted)">Analyzing...</div>`;
+  results.prepend(card);
+  const fd = new FormData(); fd.append('file', file);
+  fetch('/analyze', { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+    card.innerHTML = `<div class="filename">🎵 ${file.name}</div><div class="analysis-grid"><div class="analysis-item"><div class="analysis-label">Key</div><div class="analysis-value key-val">${data.key}</div></div><div class="analysis-item"><div class="analysis-label">BPM</div><div class="analysis-value bpm-val">${data.bpm}</div></div><div class="analysis-item"><div class="analysis-label">Duration</div><div class="analysis-value">${data.duration}</div></div></div>`;
+  }).catch(() => { card.innerHTML = `<div class="filename">❌ ${file.name} — Analysis failed</div>`; });
+}
+
+// ── AUTO TUNE ─────────────────────────────────
+let _atFile = null;
+setupDrop(document.getElementById('atZone'), f => { _atFile = f; document.getElementById('atName').textContent = '✅ ' + f.name; });
+document.getElementById('atInput').addEventListener('change', function() { _atFile = this.files[0]; document.getElementById('atName').textContent = '✅ ' + _atFile.name; });
+document.getElementById('at_correction').addEventListener('input', function() { document.getElementById('at_correction_val').textContent = Math.round(this.value * 100) + '%'; });
+function startAutotune() {
+  if (!_atFile) { alert('Please drop a vocals file!'); return; }
+  const btn = document.getElementById('atBtn'); const status = document.getElementById('atStatus');
+  btn.disabled = true; btn.textContent = '⏳ Processing...'; status.textContent = 'Applying pitch correction...';
+  const fd = new FormData(); fd.append('file', _atFile); fd.append('key', document.getElementById('at_key').value); fd.append('correction', document.getElementById('at_correction').value);
+  fetch('/autotune', { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+    btn.disabled = false; btn.textContent = '🎤 Apply Auto Tune';
+    if (data.status === 'done') status.innerHTML = `✅ Done! <a href="/autotune_download/${data.job_id}/${data.file}" download style="color:var(--pink);font-weight:600">⬇️ Download</a>`;
+    else status.textContent = 'Error: ' + (data.error || 'Something went wrong');
+  }).catch(() => { btn.disabled = false; btn.textContent = '🎤 Apply Auto Tune'; status.textContent = 'Failed'; });
+}
+
+// ── MIXER SLIDERS ─────────────────────────────
+[
+  {id:'vocal_volume',unit:'%',mult:100},{id:'highpass',unit:'hz'},{id:'comp_threshold',unit:'db'},
+  {id:'low',unit:'db'},{id:'high',unit:'db'},{id:'reverb_mix',unit:'%',mult:100},
+  {id:'delay_mix',unit:'%',mult:100},{id:'delay_time',unit:'s'},{id:'instrumental_volume',unit:'%',mult:100}
+].forEach(s => {
+  const el = document.getElementById(s.id); const val = document.getElementById(s.id + '_val');
+  el.addEventListener('input', () => { let v = parseFloat(el.value); if (s.mult) v = Math.round(v * s.mult); val.textContent = v + s.unit; });
+});
+document.getElementById('mix_at_correction').addEventListener('input', function() { document.getElementById('mix_at_val').textContent = Math.round(this.value * 100) + '%'; });
+
+// ── MIXER FILES & AUTOTUNE TOGGLE ─────────────
+let _voxFile = null, _instFile = null, _mixerAtEnabled = false;
+setupDrop(document.getElementById('voxZone'), f => { _voxFile = f; document.getElementById('voxName').textContent = '✅ ' + f.name; });
+setupDrop(document.getElementById('instZone'), f => { _instFile = f; document.getElementById('instName').textContent = '✅ ' + f.name; });
+document.getElementById('voxInput').addEventListener('change', function() { _voxFile = this.files[0]; document.getElementById('voxName').textContent = '✅ ' + _voxFile.name; });
+document.getElementById('instInput').addEventListener('change', function() { _instFile = this.files[0]; document.getElementById('instName').textContent = '✅ ' + _instFile.name; });
+function toggleMixerAt() {
+  _mixerAtEnabled = !_mixerAtEnabled;
+  setToggle(document.getElementById('mixAt_track'), document.getElementById('mixAt_thumb'), _mixerAtEnabled, 'var(--pink)');
+  document.getElementById('mixAt_controls').style.display = _mixerAtEnabled ? 'grid' : 'none';
+}
+function startMix() {
+  if (!_voxFile || !_instFile) { alert('Please drop both a vocals and instrumental file!'); return; }
+  const btn = document.getElementById('mixBtn'); const status = document.getElementById('mixStatus');
+  btn.disabled = true; btn.textContent = '⏳ Mixing...'; status.textContent = 'Processing your tracks...';
+  const fd = new FormData(); fd.append('vocals', _voxFile); fd.append('instrumental', _instFile);
+  ['vocal_volume','highpass','comp_threshold','low','high','reverb_mix','delay_mix','delay_time','instrumental_volume'].forEach(id => { const el = document.getElementById(id); if (el) fd.append(id, el.value); });
+  fd.append('at_enabled', _mixerAtEnabled ? 'true' : 'false');
+  if (document.getElementById('mix_at_key')) fd.append('at_key', document.getElementById('mix_at_key').value);
+  if (document.getElementById('mix_at_correction')) fd.append('at_correction', document.getElementById('mix_at_correction').value);
+  fetch('/mix', { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+    if (data.job_id) pollMix(data.job_id, btn, status);
+    else { btn.disabled = false; btn.textContent = '🎚️ Mix & Master'; status.textContent = 'Error: ' + (data.error || 'Unknown'); }
+  }).catch(() => { btn.disabled = false; btn.textContent = '🎚️ Mix & Master'; status.textContent = 'Upload failed'; });
+}
+function pollMix(jobId, btn, status) {
+  const interval = setInterval(() => {
+    fetch('/mix_status/' + jobId).then(r => r.json()).then(data => {
+      if (data.status === 'processing') status.textContent = '🎚️ Applying EQ, compression, reverb & mastering...';
+      else if (data.status === 'done') { clearInterval(interval); btn.disabled = false; btn.textContent = '🎚️ Mix & Master'; status.innerHTML = `✅ Done! <a href="/mix_download/${jobId}/${data.file}" download style="color:var(--purple);font-weight:600">⬇️ Download Mix</a>`; }
+      else if (data.status === 'error') { clearInterval(interval); btn.disabled = false; btn.textContent = '🎚️ Mix & Master'; status.textContent = 'Error: ' + (data.error || 'Something went wrong'); }
+    });
+  }, 2000);
+}
+
+// ── MULTITRACK ────────────────────────────────
+let mtFiles = {}, mtAtEnabled = false;
+const mtTracks = [
+  {id:'vocals',color:'var(--pink)',bg:'var(--pink-light)'},{id:'drums',color:'var(--teal)',bg:'var(--teal-light)'},
+  {id:'bass',color:'#f59e0b',bg:'#fef3c7'},{id:'guitar',color:'#10b981',bg:'#d1fae5'},
+  {id:'keys',color:'var(--indigo)',bg:'var(--indigo-light)'},{id:'other',color:'#64748b',bg:'#f1f5f9'},
+];
+mtTracks.forEach(t => {
+  const input = document.getElementById('mt_input_' + t.id);
+  const zone = document.getElementById('mt_zone_' + t.id);
+  const nameEl = document.getElementById('mt_name_' + t.id);
+  input.addEventListener('change', () => { mtFiles[t.id] = input.files[0]; nameEl.textContent = '✅ ' + input.files[0].name; zone.style.borderColor = t.color; zone.style.background = t.bg; });
+  setupDrop(zone, f => { mtFiles[t.id] = f; nameEl.textContent = '✅ ' + f.name; zone.style.borderColor = t.color; zone.style.background = t.bg; });
+});
+[
+  {id:'mt_vocals_reverb_mix',unit:'%',mult:100},{id:'mt_vocals_comp',unit:'db'},
+  {id:'mt_vocals_delay_mix',unit:'%',mult:100},{id:'mt_vocals_highpass',unit:'hz'}
+].forEach(s => {
+  const el = document.getElementById(s.id); const val = document.getElementById(s.id + '_val');
+  el.addEventListener('input', () => { let v = parseFloat(el.value); if (s.mult) v = Math.round(v * s.mult); val.textContent = v + s.unit; });
+});
+mtTracks.forEach(t => {
+  const vol = document.getElementById('mt_vol_' + t.id); const valEl = document.getElementById('mt_vol_' + t.id + '_val');
+  vol.addEventListener('input', () => { valEl.textContent = Math.round(parseFloat(vol.value) * 100) + '%'; });
+});
+function toggleMtAt() {
+  mtAtEnabled = !mtAtEnabled;
+  setToggle(document.getElementById('mtAt_track'), document.getElementById('mtAt_thumb'), mtAtEnabled, 'var(--pink)');
+  document.getElementById('mtAt_label').textContent = mtAtEnabled ? 'On' : 'Off';
+}
+function startMultitrack() {
+  if (Object.keys(mtFiles).length === 0) { alert('Please drop at least one track!'); return; }
+  const btn = document.getElementById('mtMixBtn'); const status = document.getElementById('mtStatus');
+  btn.disabled = true; btn.textContent = '⏳ Mixing...'; status.textContent = 'Processing ' + Object.keys(mtFiles).length + ' tracks...';
+  const fd = new FormData();
+  Object.entries(mtFiles).forEach(([name, file]) => fd.append(name, file));
+  mtTracks.forEach(t => { const vol = document.getElementById('mt_vol_' + t.id); if (vol) fd.append(t.id + '_volume', vol.value); });
+  fd.append('vocals_at_enabled', mtAtEnabled ? 'true' : 'false');
+  fd.append('vocals_at_key', document.getElementById('mt_at_key').value);
+  fd.append('vocals_comp', document.getElementById('mt_vocals_comp').value);
+  fd.append('vocals_reverb_mix', document.getElementById('mt_vocals_reverb_mix').value);
+  fd.append('vocals_delay_mix', document.getElementById('mt_vocals_delay_mix').value);
+  fd.append('vocals_highpass', document.getElementById('mt_vocals_highpass').value);
+  fetch('/multitrack', { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+    if (data.job_id) pollMtMix(data.job_id, btn, status);
+    else { btn.disabled = false; btn.textContent = '🎛 Mix All Tracks & Master'; status.textContent = 'Error: ' + (data.error || 'Unknown'); }
+  }).catch(() => { btn.disabled = false; btn.textContent = '🎛 Mix All Tracks & Master'; status.textContent = 'Upload failed'; });
+}
+function pollMtMix(jobId, btn, status) {
+  const interval = setInterval(() => {
+    fetch('/mix_status/' + jobId).then(r => r.json()).then(data => {
+      if (data.status === 'processing') status.textContent = '🎚️ Applying effects and mastering...';
+      else if (data.status === 'done') { clearInterval(interval); btn.disabled = false; btn.textContent = '🎛 Mix All Tracks & Master'; status.innerHTML = `✅ Done! <a href="/mix_download/${jobId}/${data.file}" download style="color:var(--indigo);font-weight:600">⬇️ Download Multitrack Mix</a>`; }
+      else if (data.status === 'error') { clearInterval(interval); btn.disabled = false; btn.textContent = '🎛 Mix All Tracks & Master'; status.textContent = 'Error: ' + (data.error || 'Something went wrong'); }
+    });
+  }, 2000);
+}
+</script>
+</body>
+</html>
